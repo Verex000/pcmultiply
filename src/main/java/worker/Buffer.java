@@ -20,6 +20,8 @@ public class Buffer
     private final Condition consumerCond;
     
     public Buffer() {
+        //Ensures a fair lock
+        //Longest waiting thread will acquire this lock first
         this.lock = new ReentrantLock(true);
         this.producerCond = this.lock.newCondition();
         this.consumerCond = this.lock.newCondition();
@@ -29,12 +31,23 @@ public class Buffer
     {
         this.lock.lock();
         try {
+            //Buffer is full so producer has to wait
             while(bigMatrix.size() == PCMatrix.BOUNDED_BUFFER_SIZE) {
+                System.out.println(Thread.currentThread().getName() + 
+                        ": Buffer is Full, waiting");
                 this.producerCond.await();
             }
             boolean isAdded = this.bigMatrix.offer(matrix);
             if(isAdded) {
+                //We signal to the consumer that the buffer is not empty.
+                //Therefore consumer can keep running.
                 this.consumerCond.signalAll();
+            }
+            //This will never happen unless there is a null matrix, or an error
+            else {
+                System.out.println(Thread.currentThread().getName() + 
+                        ": Matrix could not be added to the buffer");
+                throw new IllegalStateException();
             }
         }
         finally {
@@ -47,10 +60,15 @@ public class Buffer
         Matrix m = null;
         this.lock.lock();
         try {
+            //Buffer is empty, so consumer has to wait
             while(bigMatrix.isEmpty()) {
+                System.out.println(Thread.currentThread().getName() + 
+                        ": Buffer is empty, waiting");
                 this.consumerCond.await();
             }
             m = this.bigMatrix.poll();
+            //This will most likely never happen.
+            //If this happens then a null matrix was produced.
             if(m == null) {
                 throw new NoSuchElementException("Get: A null matrix was consumed");
             }
@@ -58,6 +76,7 @@ public class Buffer
             //this.producerCond.signalAll();
         }
         finally {
+            //We signal to the producer that the buffer is not full.
             this.producerCond.signalAll();
             this.lock.unlock();
         }

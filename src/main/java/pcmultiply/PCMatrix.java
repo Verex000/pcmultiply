@@ -30,6 +30,8 @@
  */
 package pcmultiply;
 
+import counter.Counter;
+import counter.SumCounter;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -37,6 +39,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import worker.Buffer;
 
 import worker.Consumer;
 import worker.Matrix;
@@ -51,10 +54,10 @@ public class PCMatrix
         
         public static int MATRIX_MODE = 0;
         public static int WORKER_THREADS = 1;
-        public static int MATRICIES = 1200;
+        public static int MATRICIES = 200;
         public static int BOUNDED_BUFFER_SIZE = 100;
 
-	public static void main(String[] args)
+	public static void main(String[] args) throws InterruptedException
 	{
 		Options options = new Options();
 
@@ -141,37 +144,37 @@ public class PCMatrix
         
         
         
-        //
-        // Demonstration code to show the use of matrix routines
-        //
-        // DELETE THIS CODE ON ASSIGNMENT 2 SUBMISSION
-        // ----------------------------------------------------------
-        System.out.println("MATRIX MULTIPLICATION DEMO:\n\n");
-		Matrix m1, m2, m3;
-		for (int i = 0; i < MATRICIES; i++)
-		{
-			m1 = new Matrix(); m1.generate();
-			m2 = new Matrix(); m2.generate();
-			m3 = m1.multiply(m2);
-			
-			if (m3 != null)
-			{
-				System.out.print(m1);
-				System.out.printf("    X\n");
-				System.out.print(m2);
-				System.out.printf("    =\n");
-				System.out.print(m3);
-				System.out.printf("\n");
-				
-//				FreeMatrix(m3);
-//				FreeMatrix(m2);
-//				FreeMatrix(m1);
-//				m1 = NULL;
-//				m2 = NULL;
-//				m3 = NULL;
-			}
-		}
-		System.exit(1);
+//        //
+//        // Demonstration code to show the use of matrix routines
+//        //
+//        // DELETE THIS CODE ON ASSIGNMENT 2 SUBMISSION
+//        // ----------------------------------------------------------
+//        System.out.println("MATRIX MULTIPLICATION DEMO:\n\n");
+//		Matrix m1, m2, m3;
+//		for (int i = 0; i < MATRICIES; i++)
+//		{
+//			m1 = new Matrix(); m1.generate();
+//			m2 = new Matrix(); m2.generate();
+//			m3 = m1.multiply(m2);
+//			
+//			if (m3 != null)
+//			{
+//				System.out.print(m1);
+//				System.out.printf("    X\n");
+//				System.out.print(m2);
+//				System.out.printf("    =\n");
+//				System.out.print(m3);
+//				System.out.printf("\n");
+//				
+////				FreeMatrix(m3);
+////				FreeMatrix(m2);
+////				FreeMatrix(m1);
+////				m1 = NULL;
+////				m2 = NULL;
+////				m3 = NULL;
+//			}
+//		}
+//		System.exit(1);
         // ----------------------------------------------------------
 		
 		System.out.printf("Producing %d matrices in mode %d.\n", MATRICIES , MATRIX_MODE);
@@ -179,14 +182,28 @@ public class PCMatrix
 		System.out.printf("With %d producer and consumer thread(s).\n", WORKER_THREADS);
 		System.out.printf("\n");
 		
-		Producer pr;
-		Consumer co;
-		
-		int prs = 0;
-		int cos = 0;
-		int prodtot = 0;
-		int constot = 0;
-		int consmul = 0;
+                Counter prodCounter = new Counter();
+                Counter consCounter = new Counter();
+                Counter consMultCounter = new Counter();
+                SumCounter prsCounter = new SumCounter();
+                SumCounter cosCounter = new SumCounter();
+                Buffer sharedBuffer = new Buffer();
+                
+		Producer prod1 = new Producer(sharedBuffer, prodCounter, prsCounter, 1);
+		Consumer cons1 = new Consumer(sharedBuffer, consCounter, 
+                        consMultCounter, cosCounter, 1);
+                
+                prod1.start();
+                cons1.start();
+                
+                prod1.join();
+                cons1.join();
+                
+		int prs = prsCounter.get();
+		int cos = cosCounter.get();
+		int prodtot = prodCounter.get();
+		int constot = consCounter.get();
+		int consmul = consMultCounter.get();
 		
 		// consume ProdConsStats from producer and consumer threads
 		// add up total matrix stats in prs, cos, prodtot, constot, consmul 
