@@ -18,7 +18,7 @@ public class Buffer
     private final Lock lock;
     private final Condition producerCond;
     private final Condition consumerCond;
-    
+        
     public Buffer() {
         //Ensures a fair lock
         //Longest waiting thread will acquire this lock first
@@ -26,15 +26,12 @@ public class Buffer
         this.producerCond = this.lock.newCondition();
         this.consumerCond = this.lock.newCondition();
     }
-    // Bounded buffer put() and get()
+//    // Bounded buffer put() and get()
     public void put(Matrix matrix) throws InterruptedException
     {
         this.lock.lock();
         try {
-            //Buffer is full so producer has to wait
             while(bigMatrix.size() == PCMatrix.BOUNDED_BUFFER_SIZE) {
-                System.out.println(Thread.currentThread().getName() + 
-                        ": Buffer is Full, waiting");
                 this.producerCond.await();
             }
             boolean isAdded = this.bigMatrix.offer(matrix);
@@ -45,8 +42,6 @@ public class Buffer
             }
             //This will never happen unless there is a null matrix, or an error
             else {
-                System.out.println(Thread.currentThread().getName() + 
-                        ": Matrix could not be added to the buffer");
                 throw new IllegalStateException();
             }
         }
@@ -54,7 +49,7 @@ public class Buffer
             this.lock.unlock();
         }
     }
-
+    
     public Matrix get() throws InterruptedException
     {
         Matrix m = null;
@@ -62,8 +57,6 @@ public class Buffer
         try {
             //Buffer is empty, so consumer has to wait
             while(bigMatrix.isEmpty()) {
-                System.out.println(Thread.currentThread().getName() + 
-                        ": Buffer is empty, waiting");
                 this.consumerCond.await();
             }
             m = this.bigMatrix.poll();
@@ -72,14 +65,12 @@ public class Buffer
             if(m == null) {
                 throw new NoSuchElementException("Get: A null matrix was consumed");
             }
+            this.producerCond.signalAll();
             return m;
-            //this.producerCond.signalAll();
         }
         finally {
             //We signal to the producer that the buffer is not full.
-            this.producerCond.signalAll();
             this.lock.unlock();
         }
     }
-
 }

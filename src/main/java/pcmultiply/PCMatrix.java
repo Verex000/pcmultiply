@@ -32,6 +32,7 @@ package pcmultiply;
 
 import counter.Counter;
 import counter.SumCounter;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -52,11 +53,15 @@ public class PCMatrix
 	public static final String S_MATRICES = "matrices";
 	public static final String S_MATRIX_MODE = "matrix-mode";
         
+//        public static int MATRIX_MODE = 0;
+//        public static int WORKER_THREADS = 1;
+//        public static int MATRICIES = 1200;
+//        public static int BOUNDED_BUFFER_SIZE = 200;
         public static int MATRIX_MODE = 0;
-        public static int WORKER_THREADS = 1;
-        public static int MATRICIES = 200;
-        public static int BOUNDED_BUFFER_SIZE = 100;
-
+        public static int WORKER_THREADS = 2;
+        public static int MATRICIES = 50;
+        public static int BOUNDED_BUFFER_SIZE = 5;
+        
 	public static void main(String[] args) throws InterruptedException
 	{
 		Options options = new Options();
@@ -188,16 +193,33 @@ public class PCMatrix
                 SumCounter prsCounter = new SumCounter();
                 SumCounter cosCounter = new SumCounter();
                 Buffer sharedBuffer = new Buffer();
+                ReentrantLock printLock = new ReentrantLock();
                 
-		Producer prod1 = new Producer(sharedBuffer, prodCounter, prsCounter, 1);
-		Consumer cons1 = new Consumer(sharedBuffer, consCounter, 
-                        consMultCounter, cosCounter, 1);
+                Producer[] prodArr = new Producer[WORKER_THREADS];
+                Consumer[] consArr = new Consumer[WORKER_THREADS];
+                for(int i = 0; i < WORKER_THREADS; i++) {
+                    prodArr[i] = new Producer(sharedBuffer, prodCounter, prsCounter, i + 1);
+                    consArr[i] = new Consumer(sharedBuffer, consCounter, 
+                            consMultCounter, cosCounter, i + 1, printLock);
+                }
+                prodArr[0].start();
+                prodArr[1].start();
+                consArr[0].start();
+                consArr[1].start();
                 
-                prod1.start();
-                cons1.start();
-                
-                prod1.join();
-                cons1.join();
+                prodArr[0].join();
+                prodArr[1].join();
+                consArr[0].join();
+                consArr[1].join();
+//		Producer prod1 = new Producer(sharedBuffer, prodCounter, prsCounter, 1);
+//		Consumer cons1 = new Consumer(sharedBuffer, consCounter, 
+//                        consMultCounter, cosCounter, 1);
+//                
+//                prod1.start();
+//                cons1.start();
+//                
+//                prod1.join();
+//                cons1.join();
                 
 		int prs = prsCounter.get();
 		int cos = cosCounter.get();
