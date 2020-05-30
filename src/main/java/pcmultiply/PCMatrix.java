@@ -32,6 +32,8 @@ package pcmultiply;
 
 import counter.Counter;
 import counter.SumCounter;
+
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,193 +48,142 @@ import worker.Consumer;
 import worker.Matrix;
 import worker.Producer;
 
-public class PCMatrix
-{
+public class PCMatrix {
 	public static final String S_WORKER_THREADS = "worker-threads";
 	public static final String S_BOUNDED_BUFFER_SIZE = "bounded-buffer-size";
 	public static final String S_MATRICES = "matrices";
 	public static final String S_MATRIX_MODE = "matrix-mode";
-        
+
 //        public static int MATRIX_MODE = 0;
 //        public static int WORKER_THREADS = 1;
 //        public static int MATRICIES = 1200;
 //        public static int BOUNDED_BUFFER_SIZE = 200;
-        public static int MATRIX_MODE = 0;
-        public static int WORKER_THREADS = 2;
-        public static int MATRICIES = 50;
-        public static int BOUNDED_BUFFER_SIZE = 5;
-        
-	public static void main(String[] args) throws InterruptedException
-	{
+	public static int MATRIX_MODE = 0;
+	public static int WORKER_THREADS = 2;
+	public static int MATRICIES = 70;
+	public static int BOUNDED_BUFFER_SIZE = 5;
+
+	public static void main(String[] args) throws InterruptedException {
 		Options options = new Options();
 
-        Option optThreads = new Option("t", S_WORKER_THREADS, true, "the number of worker threads");
-        optThreads.setRequired(false);
-        options.addOption(optThreads);
+		Option optThreads = new Option("t", S_WORKER_THREADS, true, "the number of worker threads");
+		optThreads.setRequired(false);
+		options.addOption(optThreads);
 
-        Option optBoundedBuffer = new Option("b", S_BOUNDED_BUFFER_SIZE, true, "the size of the bounded buffer");
-        optBoundedBuffer.setRequired(false);
-        options.addOption(optBoundedBuffer);
-        
-        Option optMatrices = new Option("m", S_MATRICES, true, "the number of matrices");
-        optMatrices.setRequired(false);
-        options.addOption(optMatrices);
-        
-        Option optMatrixMode = new Option("o", S_MATRIX_MODE, true, "the matrix mode");
-        optMatrixMode.setRequired(false);
-        options.addOption(optMatrixMode);
+		Option optBoundedBuffer = new Option("b", S_BOUNDED_BUFFER_SIZE, true, "the size of the bounded buffer");
+		optBoundedBuffer.setRequired(false);
+		options.addOption(optBoundedBuffer);
 
-        CommandLineParser parser = new DefaultParser();
-        HelpFormatter formatter = new HelpFormatter();
-        CommandLine cmd = null;
+		Option optMatrices = new Option("m", S_MATRICES, true, "the number of matrices");
+		optMatrices.setRequired(false);
+		options.addOption(optMatrices);
 
-        try 
-        {
-            cmd = parser.parse(options, args);
-        } 
-        catch (ParseException e) 
-        {
-            System.out.println(e.getMessage());
-            formatter.printHelp("PCMatrix", options);
+		Option optMatrixMode = new Option("o", S_MATRIX_MODE, true, "the matrix mode");
+		optMatrixMode.setRequired(false);
+		options.addOption(optMatrixMode);
 
-            System.exit(1);
-        }
-        
+		CommandLineParser parser = new DefaultParser();
+		HelpFormatter formatter = new HelpFormatter();
+		CommandLine cmd = null;
 
-        
-        String value = cmd.getOptionValue(S_WORKER_THREADS);
-        if (value != null)
-        {
-        	try
-        	{
-        		WORKER_THREADS = Integer.parseInt(value);
-        	}
-        	catch (NumberFormatException e) {}
-        }
-        
-        value = cmd.getOptionValue(S_BOUNDED_BUFFER_SIZE);
-        if (value != null)
-        {
-        	try
-        	{
-        		BOUNDED_BUFFER_SIZE = Integer.parseInt(value);
-        	}
-        	catch (NumberFormatException e) {}
-        }
-        
-        value = cmd.getOptionValue(S_MATRICES);
-        if (value != null)
-        {
-        	try
-        	{
-        		MATRICIES = Integer.parseInt(value);
-        	}
-        	catch (NumberFormatException e) {}
-        }
-        
-        value = cmd.getOptionValue(S_MATRIX_MODE);
-        if (value != null)
-        {
-        	try 
-        	{
-        		MATRIX_MODE = Integer.parseInt(value);
-        	}
-        	catch (NumberFormatException e) {}
-        }
-        
-        StringBuilder builder = new StringBuilder();
-        builder.append(S_WORKER_THREADS).append('=').append(WORKER_THREADS).append(' ');
-        builder.append(S_BOUNDED_BUFFER_SIZE).append('=').append(BOUNDED_BUFFER_SIZE).append(' ');
-        builder.append(S_MATRICES).append('=').append(MATRICIES).append(' ');
-        builder.append(S_MATRIX_MODE).append('=').append(MATRIX_MODE).append(' ');
-        System.out.println(builder.toString());
-        
-        
-        
-//        //
-//        // Demonstration code to show the use of matrix routines
-//        //
-//        // DELETE THIS CODE ON ASSIGNMENT 2 SUBMISSION
-//        // ----------------------------------------------------------
-//        System.out.println("MATRIX MULTIPLICATION DEMO:\n\n");
-//		Matrix m1, m2, m3;
-//		for (int i = 0; i < MATRICIES; i++)
-//		{
-//			m1 = new Matrix(); m1.generate();
-//			m2 = new Matrix(); m2.generate();
-//			m3 = m1.multiply(m2);
-//			
-//			if (m3 != null)
-//			{
-//				System.out.print(m1);
-//				System.out.printf("    X\n");
-//				System.out.print(m2);
-//				System.out.printf("    =\n");
-//				System.out.print(m3);
-//				System.out.printf("\n");
-//				
-////				FreeMatrix(m3);
-////				FreeMatrix(m2);
-////				FreeMatrix(m1);
-////				m1 = NULL;
-////				m2 = NULL;
-////				m3 = NULL;
+		try {
+			cmd = parser.parse(options, args);
+			List<String> list = cmd.getArgList();
+			if (list.size() == 4) {
+				WORKER_THREADS = Integer.parseInt(list.get(0));
+				BOUNDED_BUFFER_SIZE = Integer.parseInt(list.get(1));
+				MATRICIES = Integer.parseInt(list.get(2));
+				MATRIX_MODE = Integer.parseInt(list.get(3));
+			}
+		} catch (ParseException e) {
+			System.out.println(e.getMessage());
+			formatter.printHelp("PCMatrix", options);
+
+			System.exit(1);
+		}
+
+//		String value = cmd.getOptionValue("t");
+//		System.out.println("value" + value);
+//		if (value != null) {
+//			try {
+//				WORKER_THREADS = Integer.parseInt(value);
+//			} catch (NumberFormatException e) {
 //			}
 //		}
-//		System.exit(1);
-        // ----------------------------------------------------------
-		
-		System.out.printf("Producing %d matrices in mode %d.\n", MATRICIES , MATRIX_MODE);
+//
+//		value = cmd.getOptionValue(S_BOUNDED_BUFFER_SIZE);
+//		if (value != null) {
+//			try {
+//				BOUNDED_BUFFER_SIZE = Integer.parseInt(value);
+//			} catch (NumberFormatException e) {
+//			}
+//		}
+//
+//		value = cmd.getOptionValue(S_MATRICES);
+//		if (value != null) {
+//			try {
+//				MATRICIES = Integer.parseInt(value);
+//			} catch (NumberFormatException e) {
+//			}
+//		}
+//
+//		value = cmd.getOptionValue(S_MATRIX_MODE);
+//		if (value != null) {
+//			try {
+//				MATRIX_MODE = Integer.parseInt(value);
+//			} catch (NumberFormatException e) {
+//			}
+//		}
+
+		StringBuilder builder = new StringBuilder();
+		builder.append(S_WORKER_THREADS).append('=').append(WORKER_THREADS).append(' ');
+		builder.append(S_BOUNDED_BUFFER_SIZE).append('=').append(BOUNDED_BUFFER_SIZE).append(' ');
+		builder.append(S_MATRICES).append('=').append(MATRICIES).append(' ');
+		builder.append(S_MATRIX_MODE).append('=').append(MATRIX_MODE).append(' ');
+		System.out.println(builder.toString());
+
+		System.out.printf("Producing %d matrices in mode %d.\n", MATRICIES, MATRIX_MODE);
 		System.out.printf("Using a shared buffer of size=%d\n", BOUNDED_BUFFER_SIZE);
 		System.out.printf("With %d producer and consumer thread(s).\n", WORKER_THREADS);
 		System.out.printf("\n");
-		
-                Counter prodCounter = new Counter();
-                Counter consCounter = new Counter();
-                Counter consMultCounter = new Counter();
-                SumCounter prsCounter = new SumCounter();
-                SumCounter cosCounter = new SumCounter();
-                Buffer sharedBuffer = new Buffer();
-                ReentrantLock printLock = new ReentrantLock();
-                
-                Producer[] prodArr = new Producer[WORKER_THREADS];
-                Consumer[] consArr = new Consumer[WORKER_THREADS];
-                for(int i = 0; i < WORKER_THREADS; i++) {
-                    prodArr[i] = new Producer(sharedBuffer, prodCounter, prsCounter, i + 1);
-                    consArr[i] = new Consumer(sharedBuffer, consCounter, 
-                            consMultCounter, cosCounter, i + 1, printLock);
-                }
-                prodArr[0].start();
-                prodArr[1].start();
-                consArr[0].start();
-                consArr[1].start();
-                
-                prodArr[0].join();
-                prodArr[1].join();
-                consArr[0].join();
-                consArr[1].join();
-//		Producer prod1 = new Producer(sharedBuffer, prodCounter, prsCounter, 1);
-//		Consumer cons1 = new Consumer(sharedBuffer, consCounter, 
-//                        consMultCounter, cosCounter, 1);
-//                
-//                prod1.start();
-//                cons1.start();
-//                
-//                prod1.join();
-//                cons1.join();
-                
+
+		Counter prodCounter = new Counter();
+		Counter consCounter = new Counter();
+		Counter consMultCounter = new Counter();
+		SumCounter prsCounter = new SumCounter();
+		SumCounter cosCounter = new SumCounter();
+		Buffer sharedBuffer = new Buffer();
+		ReentrantLock printLock = new ReentrantLock();
+
+		Producer[] prodArr = new Producer[WORKER_THREADS];
+		Consumer[] consArr = new Consumer[WORKER_THREADS];
+		for (int i = 0; i < WORKER_THREADS; i++) {
+			prodArr[i] = new Producer(sharedBuffer, prodCounter, prsCounter, i + 1);
+			consArr[i] = new Consumer(sharedBuffer, consCounter, consMultCounter, cosCounter, i + 1, printLock);
+		}
+		for (int i = 0; i < WORKER_THREADS; i++) {
+			prodArr[i].start();
+		}
+		for (int i = 0; i < WORKER_THREADS; i++) {
+			consArr[i].start();
+		}
+		for (int i = 0; i < WORKER_THREADS; i++) {
+			prodArr[i].join();
+		}
+		for (int i = 0; i < WORKER_THREADS; i++) {
+			consArr[i].join();
+		}
+
 		int prs = prsCounter.get();
 		int cos = cosCounter.get();
-		int prodtot = prodCounter.get();
-		int constot = consCounter.get();
+		int prodtot = prodCounter.get() + 1 - WORKER_THREADS;
+		int constot = consCounter.get() + 1 - WORKER_THREADS;
 		int consmul = consMultCounter.get();
-		
+
 		// consume ProdConsStats from producer and consumer threads
-		// add up total matrix stats in prs, cos, prodtot, constot, consmul 
-		
-		System.out.printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n",prs,cos);
-		System.out.printf("Matrices produced=%d consumed=%d multiplied=%d\n",prodtot,constot,consmul);
+		// add up total matrix stats in prs, cos, prodtot, constot, consmul
+
+		System.out.printf("Sum of Matrix elements --> Produced=%d = Consumed=%d\n", prs, cos);
+		System.out.printf("Matrices produced=%d consumed=%d multiplied=%d\n", prodtot, constot, consmul);
 	}
 }
-
-

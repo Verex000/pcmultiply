@@ -183,5 +183,11 @@ public class Matrix
 		
 		return builder.toString();
 	}
+	public int getRow() {
+		return this.rows;
+	}
+	public int getColumn() {
+		return this.columns;
+	}
 
 }

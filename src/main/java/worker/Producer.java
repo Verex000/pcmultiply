@@ -12,6 +12,7 @@ public class Producer extends Thread implements Runnable
     private final Buffer sharedBuffer;
     private final Counter sharedProducerCounter;
     private final SumCounter sharedSumCounter;
+    static int total;
     public Producer(Buffer buffer, Counter counter, SumCounter sumCounter, int threadName) {
         super("PRODUCER " + threadName);
         this.sharedBuffer = buffer;
@@ -23,12 +24,14 @@ public class Producer extends Thread implements Runnable
     public void run()
     {
         //Keep adding matrices until we reach the limit.
-        while(sharedProducerCounter.get() < PCMatrix.MATRICIES) {
+        while(sharedProducerCounter.get() < PCMatrix.MATRICIES ) {
             Matrix m = new Matrix();
             m.generate();
             try {
                 sharedBuffer.put(m);
                 sharedSumCounter.increaseBy(m.getSum());
+//                total++;
+//                System.out.println(total);
                 sharedProducerCounter.increment();
             } catch (InterruptedException ex) {
                 Logger.getLogger(Producer.class.getName()).log(Level.SEVERE, null, ex);
