@@ -1,3 +1,11 @@
+/*
+TCSS422 - Spring 2020
+Assignment 2 - Parallel Matrix Multiplier
+Kevin Bui and Diem Vu
+*/
+/**************************************************
+ * Extra Credit Features: EC1, EC2, EC3 implemented
+ **************************************************/
 /**
  *  pcmatrix module
  *  Primary module providing control flow for the pcMatrix program
@@ -59,7 +67,7 @@ public class PCMatrix {
 //        public static int MATRICIES = 1200;
 //        public static int BOUNDED_BUFFER_SIZE = 200;
 	public static int MATRIX_MODE = 0;
-	public static int WORKER_THREADS = 2;
+	public static int WORKER_THREADS = 5;
 	public static int MATRICIES = 70;
 	public static int BOUNDED_BUFFER_SIZE = 5;
 
