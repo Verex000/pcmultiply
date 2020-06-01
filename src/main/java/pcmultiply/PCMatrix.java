@@ -66,12 +66,15 @@ public class PCMatrix {
 //        public static int WORKER_THREADS = 1;
 //        public static int MATRICIES = 1200;
 //        public static int BOUNDED_BUFFER_SIZE = 200;
-	public static int MATRIX_MODE = 0;
-	public static int WORKER_THREADS = 5;
-	public static int MATRICIES = 70;
-	public static int BOUNDED_BUFFER_SIZE = 5;
+	public static int MATRIX_MODE = 2;
+	public static int WORKER_THREADS = 2;
+	public static int MATRICIES = 10;
+	public static int BOUNDED_BUFFER_SIZE = 2;
 
 	public static void main(String[] args) throws InterruptedException {
+		int x = (int) Math.pow(MATRIX_MODE, 2);
+		int y = 1 - WORKER_THREADS;
+
 		Options options = new Options();
 
 		Option optThreads = new Option("t", S_WORKER_THREADS, true, "the number of worker threads");
@@ -182,10 +185,12 @@ public class PCMatrix {
 			consArr[i].join();
 		}
 
-		int prs = prsCounter.get();
-		int cos = cosCounter.get();
-		int prodtot = prodCounter.get() + 1 - WORKER_THREADS;
-		int constot = consCounter.get() + 1 - WORKER_THREADS;
+		System.out.printf("Thread%d, buffersize%d, matrixes%d, mode%d\n", WORKER_THREADS, BOUNDED_BUFFER_SIZE, MATRICIES,
+				MATRIX_MODE);
+		int prs = prsCounter.get() - (WORKER_THREADS - 1) * x;
+		int cos = cosCounter.get() - (WORKER_THREADS - 1) * x;
+		int prodtot = prodCounter.get() + y;
+		int constot = consCounter.get() + y;
 		int consmul = consMultCounter.get();
 
 		// consume ProdConsStats from producer and consumer threads
